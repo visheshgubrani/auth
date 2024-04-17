@@ -116,7 +116,7 @@ const logoutUser = asyncHandler(async(req, res) => {
             new: true
         }
     )
-
+    console.log(req.user._id);
     return res.status(200).clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, 'User Logged Out Successfully', {}))
@@ -124,7 +124,28 @@ const logoutUser = asyncHandler(async(req, res) => {
 
 })
 
+const changeCurrentPassword = asyncHandler(async (req,res) => {
+    const {oldPassword, newPassword} = req.body
+    
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if(!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid Old Password")
+    }
+
+    user.password = newPassword
+    await user.save({validateBeforeSave: false})
+
+    return res.status(200)
+    .json(
+        new ApiResponse(200, "Password Changed Successfully", {})
+    )
+})
+
+
 export {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 }
